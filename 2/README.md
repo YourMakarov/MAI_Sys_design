@@ -28,7 +28,6 @@ RESTful API для управления задачами с JWT-аутентиф
 
 1. Клонируйте репозиторий:
 git clone <ваш-репозиторий>
-cd task-tracker
 
 2. Запустите приложение:
 docker-compose up --build
