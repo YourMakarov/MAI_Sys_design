@@ -1,0 +1,252 @@
+openapi: 3.0.3
+info:
+  title: Task Tracker API
+  description: API for Task Planning System
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000/api
+    description: Development server
+
+paths:
+  /auth/token:
+    post:
+      summary: Login For Access Token
+      operationId: login_for_access_token
+      tags:
+        - AuthService
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+
+  /auth/users/me:
+    get:
+      summary: Get Current User
+      operationId: get_current_user
+      tags:
+        - AuthService
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+      security:
+        - bearerAuth: []
+
+  /tasks/:
+    post:
+      summary: Create a new task
+      operationId: create_task
+      tags:
+        - TaskService
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+    get:
+      summary: Get list of user tasks
+      operationId: list_tasks
+      tags:
+        - TaskService
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+
+  /tasks/{task_id}:
+    get:
+      summary: Get a specific task by ID
+      operationId: get_task
+      tags:
+        - TaskService
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+    put:
+      summary: Update task status
+      operationId: update_task_status
+      tags:
+        - TaskService
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdate'
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Role:
+      type: string
+      enum: [client, admin, executor]
+      description: User role in the system
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    Token:
+      type: object
+      required: [access_token, token_type]
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          default: bearer
+
+    User:
+      type: object
+      required: [user_id, username]
+      properties:
+        user_id:
+          type: integer
+        username:
+          type: string
+        full_name:
+          type: string
+        role:
+          $ref: '#/components/schemas/Role'
+
+    TaskStatus:
+      type: string
+      enum: [todo, in_progress, done, cancelled]
+
+    Priority:
+      type: string
+      enum: [low, medium, high]
+
+    Task:
+      type: object
+      properties:
+        task_id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        priority:
+          $ref: '#/components/schemas/Priority'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        due_date:
+          type: string
+          format: date
+          nullable: true
+        assignee_id:
+          type: integer
+          nullable: true
+        creator_id:
+          type: integer
+
+    TaskCreate:
+      type: object
+      required: [title, description]
+      properties:
+        title:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+        priority:
+          $ref: '#/components/schemas/Priority'
+          default: medium
+        due_date:
+          type: string
+          format: date
+          nullable: true
+        assignee_id:
+          type: integer
+          nullable: true
+
+    TaskUpdate:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+          nullable: true
+        priority:
+          $ref: '#/components/schemas/Priority'
+          nullable: true
+        due_date:
+          type: string
+          format: date
+          nullable: true
+        assignee_id:
+          type: integer
+          nullable: true
